@@ -286,9 +286,9 @@ Quality depends on edge fidelity, texture key accuracy, and GAN synthesis:
 
 ### 5.3 Computational Complexity Analysis
 
-Encoding Complexity: Edge detection $(O(W \times H))$, texture key generation ($O(W \times H \times k)$), and delta encoding ($O(W \times H)$) yield a total complexity of $O(W \times H \times (2 + k))$ per frame.
+Encoding Complexity: Edge detection $(O(W \times H))$, texture key generation $(O(W \times H \times k))$, and delta encoding $(O(W \times H))$ yield a total complexity of $O(W \times H \times (2 + k))$ per frame.
 
-Decoding Complexity: Edge reconstruction ($O(W \times H)$), texture expansion ($O(k \times W \times H)$), and GAN inference ($O(N_{\text{params}})$) yield a total complexity of $O(W \times H \times k + N_{\text{params}})$ per frame.
+Decoding Complexity: Edge reconstruction $(O(W \times H))$, texture expansion $(O(k \times W \times H))$, and GAN inference $(O(N_{\text{params}}))$ yield a total complexity of $O(W \times H \times k + N_{\text{params}})$ per frame.
 
 ### 5.4 Quality-Compression Trade-offs
 

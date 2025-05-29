@@ -16,6 +16,29 @@ This work introduces a dual-file framework that separates structural information
 
 The proposed system intersects traditional video compression, neural network-based compression, generative adversarial networks (GANs), and super-resolution. Traditional codecs (H.264, H.265, VVC) rely on block-based motion compensation and transform coding, achieving significant bit-rate reductions but facing increasing complexity and quality degradation at high compression ratios. Neural network-based approaches, such as those by Ballé et al. (2017) and Lu et al. (2019), show promise but often prioritize traditional metrics over perceptual quality. GANs, introduced by Goodfellow et al. (2014), have advanced image and video synthesis, with works like Pix2Pix (Isola et al., 2017) and vid2vid (Wang et al., 2019) inspiring our PhotochemicalGAN. Super-resolution techniques, from SRCNN (Dong et al., 2015) to ESRGAN (Wang et al., 2018), enhance our optional upscaling module.
 
+### 2.1 Extended Related Work Analysis
+
+#### 2.1.1 Neural Network-Based Video Compression
+Recent advances in neural video compression have focused on optimizing rate-distortion trade-offs using deep learning. Ballé et al.'s (2017) end-to-end optimized image compression framework inspired subsequent video compression research, using autoencoders to optimize both rate and distortion. Lu et al.'s (2019) DVC framework uses motion estimation and residual coding with neural networks, while Mentzer et al. (2020) employ GANs to enhance perceptual quality in compressed images. Rippel et al. (2019) explore neural video compression with a focus on perceptual metrics like LPIPS. While these works focus on learned compression, they typically use single-stream architectures, unlike our dual-file approach that separates structural and textural data.
+
+#### 2.1.2 GAN-Based Video Synthesis and Reconstruction
+The PhotochemicalGAN's frame synthesis from compressed edge maps and texture keys builds upon advances in GAN-based video generation. Isola et al.'s (2017) Pix2Pix framework for image-to-image translation directly inspired our edge-to-frame synthesis approach. Wang et al.'s (2019) vid2vid work on video-to-video translation using GANs is highly relevant to our ElysiumModule's temporal consistency challenges. Chen et al.'s (2020) TecoGAN focuses on temporally coherent video super-resolution, while Chu et al. (2020) address temporal coherence in GAN-based video generation through self-supervision.
+
+#### 2.1.3 Dual-Stream and Multi-Stream Architectures
+Our dual-file approach (.hades for edges, .cerberus for textures) shares conceptual similarities with multi-stream compression methods. Habibian et al. (2019) use hierarchical autoencoders to separate spatial and temporal features, while Li et al. (2018) separate screen content into structural and textural components in HEVC. The paper's fractal generation analogies connect to older works on fractal video compression, which separate structural rules from iterative rendering. Our system modernizes these concepts with neural techniques.
+
+#### 2.1.4 Super-Resolution and Upscaling
+The StyxUpscaler module builds upon deep learning-based super-resolution advances. Dong et al.'s (2015) SRCNN pioneered deep learning for super-resolution, while Ledig et al.'s (2017) SRGAN introduced GANs for photo-realistic super-resolution. Wang et al.'s (2018) ESRGAN improved texture synthesis and perceptual quality, and Caballero et al. (2017) addressed temporal coherence in video super-resolution.
+
+#### 2.1.5 Edge Detection and Structural Compression
+The .hades file's edge-based approach connects to recent edge detection research. Xie & Tu's (2015) Holistically-Nested Edge Detection (HED) and Liu et al.'s (2019) work on richer convolutional features for edge detection could enhance our edge map quality. Yi et al.'s (2017) structure-aware image completion demonstrates the effectiveness of using structural information for synthesis.
+
+#### 2.1.6 Temporal Modeling and Stabilization
+Addressing temporal stabilization challenges, several relevant works inform our approach. Ilg et al.'s (2017) FlowNet 2.0 provides optical flow estimation methods, while Sajjadi et al.'s (2018) frame-recurrent video super-resolution uses recurrent networks for temporal consistency. Tian et al.'s (2020) TDAN offers temporally deformable alignment for handling fast motion.
+
+#### 2.1.7 Emerging Trends and Future Directions
+Several emerging areas align with our system's goals. Attention mechanisms in GANs (Zhang et al., 2019) could enhance texture synthesis, while learned texture representations could replace PCA-based texture keys. Fractal analysis for textures connects to works on neural fractal synthesis, and perceptual optimization using deep features (Zhang et al., 2018) aligns with our focus on perceptual quality.
+
 ## 3. System Architecture
 
 The system comprises four modules: TartarusEncoder, StygianDecoder, ElysiumModule with PhotochemicalGAN, and StyxUpscaler. The pipeline extracts and compresses edge maps (.hades) and texture keys (.cerberus), reconstructs them via synchronized decoding, synthesizes frames using a GAN, and optionally upscales the output. The dual-file approach enables independent optimization, progressive reconstruction, and quality scalability.
@@ -286,9 +309,8 @@ Quality depends on edge fidelity, texture key accuracy, and GAN synthesis:
 
 ### 5.3 Computational Complexity Analysis
 
-Encoding Complexity: Edge detection $(O(W \times H))$, texture key generation $(O(W \times H \times k))$, and delta encoding $(O(W \times H))$ yield a total complexity of $O(W \times H \times (2 + k))$ per frame.
-
-Decoding Complexity: Edge reconstruction $(O(W \times H))$, texture expansion $(O(k \times W \times H))$, and GAN inference $(O(N_{\text{params}}))$ yield a total complexity of $O(W \times H \times k + N_{\text{params}})$ per frame.
+* **Encoding Complexity**: Edge detection $O(W \times H)$, texture key generation $O(W \times H \times k)$, and delta encoding $O(W \times H)$ yield $O(W \times H \times (2 + k))$ per frame.
+* **Decoding Complexity**: Edge reconstruction $O(W \times H)$, texture expansion $O(k \times W \times H)$, and GAN inference $O(N_{params})$ yield $O(W \times H \times k + N_{params})$ per frame.
 
 ### 5.4 Quality-Compression Trade-offs
 
@@ -300,25 +322,17 @@ where $\epsilon_{\text{edge}}$, $\epsilon_{\text{texture}}$, and $\epsilon_{\tex
 
 ### 5.5 Error Analysis and Quality Bounds
 
-Edge Map Error Propagation:
+* Edge Map Error Propagation:
+  $( E_t = E_{t-1} + \Delta_t + \epsilon_t )$
+  Total error: $\sum_{i=1}^{n} \epsilon_i$, bounded by keyframes every $k$ frames: $\max_{i=1}^{k} \sum_{j=1}^{i} \epsilon_j$.
 
-$$E_t = E_{t-1} + \Delta_t + \epsilon_t$$
+* Texture Key Error:
+  $( \text{Reconstruction Error} = \sum_{i=k+1}^{d} \lambda_i )$
+  where $\lambda_i$ are PCA eigenvalues, $k$ is retained components, and $d$ is original dimensionality.
 
-Total error: $\sum_{i=1}^{n} \epsilon_i$, bounded by keyframes every $k$ frames:
-
-$$\max_{i=1}^{k} \sum_{j=1}^{i} \epsilon_j$$
-
-Texture Key Error:
-
-$$\text{Reconstruction Error} = \sum_{i=k+1}^{d} \lambda_i$$
-
-where $\lambda_i$ are PCA eigenvalues, $k$ is the number of retained components, and $d$ is the original dimensionality.
-
-GAN Capacity:
-
-$$C = O(N_{\text{params}} \times R \times D_{\text{features}})$$
-
-with $N_{\text{params}} \approx 50\text{M}$, $R \approx 256 \times 256$, and $D_{\text{features}} = 512$.
+* GAN Capacity:
+  $( C = O(N_{params} \times R \times D_{features}) )$
+  with $N_{params} \approx 50M$, $R \approx 256 \times 256$, and $D_{features} = 512$.
 
 ## 6. Limitations and Future Work
 
